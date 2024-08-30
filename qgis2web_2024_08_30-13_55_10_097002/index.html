@@ -1,0 +1,824 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <link rel="stylesheet" href="css/leaflet.css">
+        <link rel="stylesheet" href="css/L.Control.Layers.Tree.css">
+        <link rel="stylesheet" href="css/L.Control.Locate.min.css">
+        <link rel="stylesheet" href="css/qgis2web.css">
+        <link rel="stylesheet" href="css/fontawesome-all.min.css">
+        <link rel="stylesheet" href="css/leaflet-control-geocoder.Geocoder.css">
+        <style>
+        html, body, #map {
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+        }
+        </style>
+        <title>Territorio Térraba PSA activos y finiquitos</title>
+    </head>
+    <body>
+        <div id="map">
+        </div>
+        <script src="js/qgis2web_expressions.js"></script>
+        <script src="js/leaflet.js"></script>
+        <script src="js/L.Control.Layers.Tree.min.js"></script>
+        <script src="js/L.Control.Locate.min.js"></script>
+        <script src="js/leaflet.rotatedMarker.js"></script>
+        <script src="js/leaflet.pattern.js"></script>
+        <script src="js/leaflet-hash.js"></script>
+        <script src="js/Autolinker.min.js"></script>
+        <script src="js/rbush.min.js"></script>
+        <script src="js/labelgun.min.js"></script>
+        <script src="js/labels.js"></script>
+        <script src="js/leaflet-control-geocoder.Geocoder.js"></script>
+        <script src="data/SHAPE_GENERALTERRITORIOS_INDIGENAS_FINALcopiar_2.js"></script>
+        <script src="data/AE_PSA_2003_3.js"></script>
+        <script src="data/AE_PSA_2018_4.js"></script>
+        <script src="data/AE_PSA_2019_5.js"></script>
+        <script src="data/PSA_2023_6.js"></script>
+        <script src="data/AE_PSA_2018copiar_7.js"></script>
+        <script src="data/SHAPE_GENERALTERRITORIOS_INDIGENAS_FINAL_8.js"></script>
+        <script>
+        var highlightLayer;
+        function highlightFeature(e) {
+            highlightLayer = e.target;
+
+            if (e.target.feature.geometry.type === 'LineString' || e.target.feature.geometry.type === 'MultiLineString') {
+              highlightLayer.setStyle({
+                color: '#ffff00',
+              });
+            } else {
+              highlightLayer.setStyle({
+                fillColor: '#ffff00',
+                fillOpacity: 1
+              });
+            }
+        }
+        var map = L.map('map', {
+            zoomControl:false, maxZoom:28, minZoom:1
+        }).fitBounds([[8.967966775852421,-83.40604098979895],[9.1182211854761,-83.2066608834695]]);
+        var hash = new L.Hash(map);
+        map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
+        var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
+        // remove popup's row if "visible-with-data"
+        function removeEmptyRowsFromPopupContent(content, feature) {
+         var tempDiv = document.createElement('div');
+         tempDiv.innerHTML = content;
+         var rows = tempDiv.querySelectorAll('tr');
+         for (var i = 0; i < rows.length; i++) {
+             var td = rows[i].querySelector('td.visible-with-data');
+             var key = td ? td.id : '';
+             if (td && td.classList.contains('visible-with-data') && feature.properties[key] == null) {
+                 rows[i].parentNode.removeChild(rows[i]);
+             }
+         }
+         return tempDiv.innerHTML;
+        }
+        // add class to format popup if it contains media
+		function addClassToPopupIfMedia(content, popup) {
+			var tempDiv = document.createElement('div');
+			tempDiv.innerHTML = content;
+			if (tempDiv.querySelector('td img')) {
+				popup._contentNode.classList.add('media');
+					// Delay to force the redraw
+					setTimeout(function() {
+						popup.update();
+					}, 10);
+			} else {
+				popup._contentNode.classList.remove('media');
+			}
+		}
+        var title = new L.Control({'position':'topright'});
+        title.onAdd = function (map) {
+            this._div = L.DomUtil.create('div', 'info');
+            this.update();
+            return this._div;
+        };
+        title.update = function () {
+            this._div.innerHTML = '<h2>Territorio Térraba PSA activos y finiquitos</h2>';
+        };
+        title.addTo(map);
+        var zoomControl = L.control.zoom({
+            position: 'topleft'
+        }).addTo(map);
+        L.control.locate({locateOptions: {maxZoom: 19}}).addTo(map);
+        var bounds_group = new L.featureGroup([]);
+        function setBounds() {
+        }
+        map.createPane('pane_GoogleSatellite_0');
+        map.getPane('pane_GoogleSatellite_0').style.zIndex = 400;
+        var layer_GoogleSatellite_0 = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+            pane: 'pane_GoogleSatellite_0',
+            opacity: 1.0,
+            attribution: '<a href="https://www.google.at/permissions/geoguidelines/attr-guide.html">Map data ©2015 Google</a>',
+            minZoom: 1,
+            maxZoom: 28,
+            minNativeZoom: 0,
+            maxNativeZoom: 20
+        });
+        layer_GoogleSatellite_0;
+        map.addLayer(layer_GoogleSatellite_0);
+        map.createPane('pane_OSMStandard_1');
+        map.getPane('pane_OSMStandard_1').style.zIndex = 401;
+        var layer_OSMStandard_1 = L.tileLayer('http://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            pane: 'pane_OSMStandard_1',
+            opacity: 1.0,
+            attribution: '<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors, CC-BY-SA</a>',
+            minZoom: 1,
+            maxZoom: 28,
+            minNativeZoom: 0,
+            maxNativeZoom: 19
+        });
+        layer_OSMStandard_1;
+        map.addLayer(layer_OSMStandard_1);
+        function pop_SHAPE_GENERALTERRITORIOS_INDIGENAS_FINALcopiar_2(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['OBJECTID_1'] !== null ? autolinker.link(feature.properties['OBJECTID_1'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Id'] !== null ? autolinker.link(feature.properties['Id'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">TERRITORIO</th>\
+                        <td>' + (feature.properties['TERRITORIO'] !== null ? autolinker.link(feature.properties['TERRITORIO'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">DECRETO</th>\
+                        <td>' + (feature.properties['DECRETO'] !== null ? autolinker.link(feature.properties['DECRETO'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['AÑO'] !== null ? autolinker.link(feature.properties['AÑO'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">FINCA</th>\
+                        <td>' + (feature.properties['FINCA'] !== null ? autolinker.link(feature.properties['FINCA'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['PLANO'] !== null ? autolinker.link(feature.properties['PLANO'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Shape_Leng'] !== null ? autolinker.link(feature.properties['Shape_Leng'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Shape_Area'] !== null ? autolinker.link(feature.properties['Shape_Area'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+        function style_SHAPE_GENERALTERRITORIOS_INDIGENAS_FINALcopiar_2_0(feature) {
+            var context = {
+                feature: feature,
+                variables: {}
+            };
+            // Start of if blocks and style check logic
+            if (exp_SHAPE_GENERALTERRITORIOS_INDIGENAS_FINALcopiar_2rule0_eval_expression(context)) {
+                  return {
+                pane: 'pane_SHAPE_GENERALTERRITORIOS_INDIGENAS_FINALcopiar_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,0.301)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(196,60,57,0.301)',
+                interactive: true,
+            };
+                }
+                else if (exp_SHAPE_GENERALTERRITORIOS_INDIGENAS_FINALcopiar_2rule1_eval_expression(context)) {
+                  return {
+                pane: 'pane_SHAPE_GENERALTERRITORIOS_INDIGENAS_FINALcopiar_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,0.301)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(190,207,80,0.301)',
+                interactive: true,
+            };
+                }
+            else {
+                return {fill: false, stroke: false};
+            }
+        }
+        map.createPane('pane_SHAPE_GENERALTERRITORIOS_INDIGENAS_FINALcopiar_2');
+        map.getPane('pane_SHAPE_GENERALTERRITORIOS_INDIGENAS_FINALcopiar_2').style.zIndex = 402;
+        map.getPane('pane_SHAPE_GENERALTERRITORIOS_INDIGENAS_FINALcopiar_2').style['mix-blend-mode'] = 'normal';
+        var layer_SHAPE_GENERALTERRITORIOS_INDIGENAS_FINALcopiar_2 = new L.geoJson(json_SHAPE_GENERALTERRITORIOS_INDIGENAS_FINALcopiar_2, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_SHAPE_GENERALTERRITORIOS_INDIGENAS_FINALcopiar_2',
+            layerName: 'layer_SHAPE_GENERALTERRITORIOS_INDIGENAS_FINALcopiar_2',
+            pane: 'pane_SHAPE_GENERALTERRITORIOS_INDIGENAS_FINALcopiar_2',
+            onEachFeature: pop_SHAPE_GENERALTERRITORIOS_INDIGENAS_FINALcopiar_2,
+            style: style_SHAPE_GENERALTERRITORIOS_INDIGENAS_FINALcopiar_2_0,
+        });
+        bounds_group.addLayer(layer_SHAPE_GENERALTERRITORIOS_INDIGENAS_FINALcopiar_2);
+        map.addLayer(layer_SHAPE_GENERALTERRITORIOS_INDIGENAS_FINALcopiar_2);
+        function pop_AE_PSA_2003_3(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">Contrato</th>\
+                        <td>' + (feature.properties['Contrato'] !== null ? autolinker.link(feature.properties['Contrato'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Beneficiar</th>\
+                        <td>' + (feature.properties['Beneficiar'] !== null ? autolinker.link(feature.properties['Beneficiar'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Actividad</th>\
+                        <td>' + (feature.properties['Actividad'] !== null ? autolinker.link(feature.properties['Actividad'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Sub_Activi</th>\
+                        <td>' + (feature.properties['Sub_Activi'] !== null ? autolinker.link(feature.properties['Sub_Activi'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Estado</th>\
+                        <td>' + (feature.properties['Estado'] !== null ? autolinker.link(feature.properties['Estado'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">AreaPSA</th>\
+                        <td>' + (feature.properties['AreaPSA'] !== null ? autolinker.link(feature.properties['AreaPSA'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">ArbPSA</th>\
+                        <td>' + (feature.properties['ArbPSA'] !== null ? autolinker.link(feature.properties['ArbPSA'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+        function style_AE_PSA_2003_3_0(feature) {
+            var context = {
+                feature: feature,
+                variables: {}
+            };
+            // Start of if blocks and style check logic
+            if (exp_AE_PSA_2003_3rule0_eval_expression(context)) {
+                  return {
+                pane: 'pane_AE_PSA_2003_3',
+                opacity: 1,
+                color: 'rgba(56,128,54,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(77,175,74,1.0)',
+                interactive: true,
+            };
+                }
+            else {
+                return {fill: false, stroke: false};
+            }
+        }
+        map.createPane('pane_AE_PSA_2003_3');
+        map.getPane('pane_AE_PSA_2003_3').style.zIndex = 403;
+        map.getPane('pane_AE_PSA_2003_3').style['mix-blend-mode'] = 'normal';
+        var layer_AE_PSA_2003_3 = new L.geoJson(json_AE_PSA_2003_3, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_AE_PSA_2003_3',
+            layerName: 'layer_AE_PSA_2003_3',
+            pane: 'pane_AE_PSA_2003_3',
+            onEachFeature: pop_AE_PSA_2003_3,
+            style: style_AE_PSA_2003_3_0,
+        });
+        bounds_group.addLayer(layer_AE_PSA_2003_3);
+        map.addLayer(layer_AE_PSA_2003_3);
+        function pop_AE_PSA_2018_4(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">Contrato</th>\
+                        <td>' + (feature.properties['Contrato'] !== null ? autolinker.link(feature.properties['Contrato'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Beneficiar</th>\
+                        <td>' + (feature.properties['Beneficiar'] !== null ? autolinker.link(feature.properties['Beneficiar'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Actividad</th>\
+                        <td>' + (feature.properties['Actividad'] !== null ? autolinker.link(feature.properties['Actividad'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Sub_Activi</th>\
+                        <td>' + (feature.properties['Sub_Activi'] !== null ? autolinker.link(feature.properties['Sub_Activi'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Estado</th>\
+                        <td>' + (feature.properties['Estado'] !== null ? autolinker.link(feature.properties['Estado'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">AreaPSA</th>\
+                        <td>' + (feature.properties['AreaPSA'] !== null ? autolinker.link(feature.properties['AreaPSA'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">ArbPSA</th>\
+                        <td>' + (feature.properties['ArbPSA'] !== null ? autolinker.link(feature.properties['ArbPSA'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+        function style_AE_PSA_2018_4_0(feature) {
+            var context = {
+                feature: feature,
+                variables: {}
+            };
+            // Start of if blocks and style check logic
+            if (exp_AE_PSA_2018_4rule0_eval_expression(context)) {
+                  return {
+                pane: 'pane_AE_PSA_2018_4',
+                opacity: 1,
+                color: 'rgba(247,225,55,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,255,51,1.0)',
+                interactive: true,
+            };
+                }
+            else {
+                return {fill: false, stroke: false};
+            }
+        }
+        map.createPane('pane_AE_PSA_2018_4');
+        map.getPane('pane_AE_PSA_2018_4').style.zIndex = 404;
+        map.getPane('pane_AE_PSA_2018_4').style['mix-blend-mode'] = 'normal';
+        var layer_AE_PSA_2018_4 = new L.geoJson(json_AE_PSA_2018_4, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_AE_PSA_2018_4',
+            layerName: 'layer_AE_PSA_2018_4',
+            pane: 'pane_AE_PSA_2018_4',
+            onEachFeature: pop_AE_PSA_2018_4,
+            style: style_AE_PSA_2018_4_0,
+        });
+        bounds_group.addLayer(layer_AE_PSA_2018_4);
+        map.addLayer(layer_AE_PSA_2018_4);
+        function pop_AE_PSA_2019_5(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">Contrato</th>\
+                        <td>' + (feature.properties['Contrato'] !== null ? autolinker.link(feature.properties['Contrato'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Beneficiar</th>\
+                        <td>' + (feature.properties['Beneficiar'] !== null ? autolinker.link(feature.properties['Beneficiar'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Actividad</th>\
+                        <td>' + (feature.properties['Actividad'] !== null ? autolinker.link(feature.properties['Actividad'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Sub_Activi</th>\
+                        <td>' + (feature.properties['Sub_Activi'] !== null ? autolinker.link(feature.properties['Sub_Activi'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Estado</th>\
+                        <td>' + (feature.properties['Estado'] !== null ? autolinker.link(feature.properties['Estado'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">AreaPSA</th>\
+                        <td>' + (feature.properties['AreaPSA'] !== null ? autolinker.link(feature.properties['AreaPSA'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">ArbPSA</th>\
+                        <td>' + (feature.properties['ArbPSA'] !== null ? autolinker.link(feature.properties['ArbPSA'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+        function style_AE_PSA_2019_5_0(feature) {
+            var context = {
+                feature: feature,
+                variables: {}
+            };
+            // Start of if blocks and style check logic
+            if (exp_AE_PSA_2019_5rule0_eval_expression(context)) {
+                  return {
+                pane: 'pane_AE_PSA_2019_5',
+                opacity: 1,
+                color: 'rgba(244,100,22,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(244,100,22,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_AE_PSA_2019_5rule1_eval_expression(context)) {
+                  return {
+                pane: 'pane_AE_PSA_2019_5',
+                opacity: 1,
+                color: 'rgba(51,160,44,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fillOpacity: 0,
+                interactive: true,
+            };
+                }
+            else {
+                return {fill: false, stroke: false};
+            }
+        }
+        map.createPane('pane_AE_PSA_2019_5');
+        map.getPane('pane_AE_PSA_2019_5').style.zIndex = 405;
+        map.getPane('pane_AE_PSA_2019_5').style['mix-blend-mode'] = 'normal';
+        var layer_AE_PSA_2019_5 = new L.geoJson(json_AE_PSA_2019_5, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_AE_PSA_2019_5',
+            layerName: 'layer_AE_PSA_2019_5',
+            pane: 'pane_AE_PSA_2019_5',
+            onEachFeature: pop_AE_PSA_2019_5,
+            style: style_AE_PSA_2019_5_0,
+        });
+        bounds_group.addLayer(layer_AE_PSA_2019_5);
+        map.addLayer(layer_AE_PSA_2019_5);
+        function pop_PSA_2023_6(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">Contrato</th>\
+                        <td>' + (feature.properties['Contrato'] !== null ? autolinker.link(feature.properties['Contrato'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Beneficiar</th>\
+                        <td>' + (feature.properties['Beneficiar'] !== null ? autolinker.link(feature.properties['Beneficiar'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Actividad</th>\
+                        <td>' + (feature.properties['Actividad'] !== null ? autolinker.link(feature.properties['Actividad'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Sub_Activi</th>\
+                        <td>' + (feature.properties['Sub_Activi'] !== null ? autolinker.link(feature.properties['Sub_Activi'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Estado</th>\
+                        <td>' + (feature.properties['Estado'] !== null ? autolinker.link(feature.properties['Estado'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Regente'] !== null ? autolinker.link(feature.properties['Regente'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">AreaPSA</th>\
+                        <td>' + (feature.properties['AreaPSA'] !== null ? autolinker.link(feature.properties['AreaPSA'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">ArbPSA</th>\
+                        <td>' + (feature.properties['ArbPSA'] !== null ? autolinker.link(feature.properties['ArbPSA'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+        function style_PSA_2023_6_0(feature) {
+            var context = {
+                feature: feature,
+                variables: {}
+            };
+            // Start of if blocks and style check logic
+            if (exp_PSA_2023_6rule0_eval_expression(context)) {
+                  return {
+                pane: 'pane_PSA_2023_6',
+                opacity: 1,
+                color: 'rgba(195,56,179,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(195,56,179,1.0)',
+                interactive: true,
+            };
+                }
+                else if (exp_PSA_2023_6rule1_eval_expression(context)) {
+                  return {
+                pane: 'pane_PSA_2023_6',
+                opacity: 1,
+                color: 'rgba(51,160,44,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1, 
+                fillOpacity: 0,
+                interactive: true,
+            };
+                }
+            else {
+                return {fill: false, stroke: false};
+            }
+        }
+        map.createPane('pane_PSA_2023_6');
+        map.getPane('pane_PSA_2023_6').style.zIndex = 406;
+        map.getPane('pane_PSA_2023_6').style['mix-blend-mode'] = 'normal';
+        var layer_PSA_2023_6 = new L.geoJson(json_PSA_2023_6, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_PSA_2023_6',
+            layerName: 'layer_PSA_2023_6',
+            pane: 'pane_PSA_2023_6',
+            onEachFeature: pop_PSA_2023_6,
+            style: style_PSA_2023_6_0,
+        });
+        bounds_group.addLayer(layer_PSA_2023_6);
+        map.addLayer(layer_PSA_2023_6);
+        function pop_AE_PSA_2018copiar_7(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">Contrato</th>\
+                        <td>' + (feature.properties['Contrato'] !== null ? autolinker.link(feature.properties['Contrato'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Beneficiar</th>\
+                        <td>' + (feature.properties['Beneficiar'] !== null ? autolinker.link(feature.properties['Beneficiar'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Actividad</th>\
+                        <td>' + (feature.properties['Actividad'] !== null ? autolinker.link(feature.properties['Actividad'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Sub_Activi</th>\
+                        <td>' + (feature.properties['Sub_Activi'] !== null ? autolinker.link(feature.properties['Sub_Activi'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Estado</th>\
+                        <td>' + (feature.properties['Estado'] !== null ? autolinker.link(feature.properties['Estado'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">AreaPSA</th>\
+                        <td>' + (feature.properties['AreaPSA'] !== null ? autolinker.link(feature.properties['AreaPSA'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">ArbPSA</th>\
+                        <td>' + (feature.properties['ArbPSA'] !== null ? autolinker.link(feature.properties['ArbPSA'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_AE_PSA_2018copiar_7_0() {
+            return {
+                pane: 'pane_AE_PSA_2018copiar_7',
+                opacity: 1,
+                color: 'rgba(247,247,10,1.0)',
+                dashArray: '5.0,1.0',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(247,247,10,1.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_AE_PSA_2018copiar_7');
+        map.getPane('pane_AE_PSA_2018copiar_7').style.zIndex = 407;
+        map.getPane('pane_AE_PSA_2018copiar_7').style['mix-blend-mode'] = 'normal';
+        var layer_AE_PSA_2018copiar_7 = new L.geoJson(json_AE_PSA_2018copiar_7, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_AE_PSA_2018copiar_7',
+            layerName: 'layer_AE_PSA_2018copiar_7',
+            pane: 'pane_AE_PSA_2018copiar_7',
+            onEachFeature: pop_AE_PSA_2018copiar_7,
+            style: style_AE_PSA_2018copiar_7_0,
+        });
+        bounds_group.addLayer(layer_AE_PSA_2018copiar_7);
+        map.addLayer(layer_AE_PSA_2018copiar_7);
+        function pop_SHAPE_GENERALTERRITORIOS_INDIGENAS_FINAL_8(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['OBJECTID_1'] !== null ? autolinker.link(feature.properties['OBJECTID_1'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Id'] !== null ? autolinker.link(feature.properties['Id'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['TERRITORIO'] !== null ? autolinker.link(feature.properties['TERRITORIO'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['DECRETO'] !== null ? autolinker.link(feature.properties['DECRETO'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['AÑO'] !== null ? autolinker.link(feature.properties['AÑO'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['FINCA'] !== null ? autolinker.link(feature.properties['FINCA'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['PLANO'] !== null ? autolinker.link(feature.properties['PLANO'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Shape_Leng'] !== null ? autolinker.link(feature.properties['Shape_Leng'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Shape_Area'] !== null ? autolinker.link(feature.properties['Shape_Area'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+        function style_SHAPE_GENERALTERRITORIOS_INDIGENAS_FINAL_8_0(feature) {
+            var context = {
+                feature: feature,
+                variables: {}
+            };
+            // Start of if blocks and style check logic
+            if (exp_SHAPE_GENERALTERRITORIOS_INDIGENAS_FINAL_8rule0_eval_expression(context)) {
+                  return {
+                pane: 'pane_SHAPE_GENERALTERRITORIOS_INDIGENAS_FINAL_8',
+                opacity: 1,
+                color: 'rgba(255,127,0,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 3.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(243,166,178,0.0)',
+                interactive: false,
+            };
+                }
+            else {
+                return {fill: false, stroke: false};
+            }
+        }
+        map.createPane('pane_SHAPE_GENERALTERRITORIOS_INDIGENAS_FINAL_8');
+        map.getPane('pane_SHAPE_GENERALTERRITORIOS_INDIGENAS_FINAL_8').style.zIndex = 408;
+        map.getPane('pane_SHAPE_GENERALTERRITORIOS_INDIGENAS_FINAL_8').style['mix-blend-mode'] = 'normal';
+        var layer_SHAPE_GENERALTERRITORIOS_INDIGENAS_FINAL_8 = new L.geoJson(json_SHAPE_GENERALTERRITORIOS_INDIGENAS_FINAL_8, {
+            attribution: '',
+            interactive: false,
+            dataVar: 'json_SHAPE_GENERALTERRITORIOS_INDIGENAS_FINAL_8',
+            layerName: 'layer_SHAPE_GENERALTERRITORIOS_INDIGENAS_FINAL_8',
+            pane: 'pane_SHAPE_GENERALTERRITORIOS_INDIGENAS_FINAL_8',
+            onEachFeature: pop_SHAPE_GENERALTERRITORIOS_INDIGENAS_FINAL_8,
+            style: style_SHAPE_GENERALTERRITORIOS_INDIGENAS_FINAL_8_0,
+        });
+        bounds_group.addLayer(layer_SHAPE_GENERALTERRITORIOS_INDIGENAS_FINAL_8);
+        map.addLayer(layer_SHAPE_GENERALTERRITORIOS_INDIGENAS_FINAL_8);
+        var osmGeocoder = new L.Control.Geocoder({
+            collapsed: true,
+            position: 'topleft',
+            text: 'Search',
+            title: 'Testing'
+        }).addTo(map);
+        document.getElementsByClassName('leaflet-control-geocoder-icon')[0]
+        .className += ' fa fa-search';
+        document.getElementsByClassName('leaflet-control-geocoder-icon')[0]
+        .title += 'Search for a place';
+        var baseMaps = {};
+        var overlaysTree = [
+            {label: 'SHAPE_GENERALTERRITORIOS_INDIGENAS_FINAL<br /><table><tr><td style="text-align: center;"><img src="legend/SHAPE_GENERALTERRITORIOS_INDIGENAS_FINAL_8_TerritorioIndígenaTérraba0.png" /></td><td>Territorio Indígena Térraba</td></tr></table>', layer: layer_SHAPE_GENERALTERRITORIOS_INDIGENAS_FINAL_8},
+            {label: '<img src="legend/AE_PSA_2018copiar_7.png" /> AE_PSA_2018 copiar', layer: layer_AE_PSA_2018copiar_7},
+        {label: '<b>PSA Activos</b>', selectAllCheckbox: true, children: [
+            {label: 'PSA_2023<br /><table><tr><td style="text-align: center;"><img src="legend/PSA_2023_6_PSA2023Proteccióndebosques0.png" /></td><td>PSA 2023 Protección de bosques</td></tr><tr><td style="text-align: center;"><img src="legend/PSA_2023_6_PSA2023SistemaAgroforestal1.png" /></td><td>PSA 2023 Sistema Agroforestal</td></tr></table>', layer: layer_PSA_2023_6},
+            {label: 'AE_PSA_2019<br /><table><tr><td style="text-align: center;"><img src="legend/AE_PSA_2019_5_PSA2019Proteccióndelrecursohídrico0.png" /></td><td>PSA 2019 Protección del recurso hídrico</td></tr><tr><td style="text-align: center;"><img src="legend/AE_PSA_2019_5_PSA2019SistemaAgroforestal1.png" /></td><td>PSA 2019 Sistema Agroforestal</td></tr></table>', layer: layer_AE_PSA_2019_5},]},
+        {label: '<b>PSA FINIQUITOS</b>', selectAllCheckbox: true, children: [
+            {label: 'AE_PSA_2018<br /><table><tr><td style="text-align: center;"><img src="legend/AE_PSA_2018_4_PSA2018Protecciónrecursohídrico0.png" /></td><td>PSA 2018 Protección recurso hídrico</td></tr></table>', layer: layer_AE_PSA_2018_4},
+            {label: 'AE_PSA_2003<br /><table><tr><td style="text-align: center;"><img src="legend/AE_PSA_2003_3_PSA2003Proteccióndebosques0.png" /></td><td>PSA 2003 Protección de bosques</td></tr></table>', layer: layer_AE_PSA_2003_3},]},
+            {label: 'SHAPE_GENERALTERRITORIOS_INDIGENAS_FINAL copiar<br /><table><tr><td style="text-align: center;"><img src="legend/SHAPE_GENERALTERRITORIOS_INDIGENAS_FINALcopiar_2_TerritorioBoruca0.png" /></td><td>Territorio Boruca</td></tr><tr><td style="text-align: center;"><img src="legend/SHAPE_GENERALTERRITORIOS_INDIGENAS_FINALcopiar_2_TerritorioCurré1.png" /></td><td>Territorio Curré</td></tr></table>', layer: layer_SHAPE_GENERALTERRITORIOS_INDIGENAS_FINALcopiar_2},
+            {label: "OSM Standard", layer: layer_OSMStandard_1},
+            {label: "Google Satellite", layer: layer_GoogleSatellite_0},]
+        var lay = L.control.layers.tree(null, overlaysTree,{
+            //namedToggle: true,
+            //selectorBack: false,
+            //closedSymbol: '&#8862; &#x1f5c0;',
+            //openedSymbol: '&#8863; &#x1f5c1;',
+            //collapseAll: 'Collapse all',
+            //expandAll: 'Expand all',
+            collapsed: true,
+        });
+        lay.addTo(map);
+        setBounds();
+        resetLabels([layer_AE_PSA_2018_4,layer_PSA_2023_6]);
+        map.on("zoomend", function(){
+            resetLabels([layer_AE_PSA_2018_4,layer_PSA_2023_6]);
+        });
+        map.on("layeradd", function(){
+            resetLabels([layer_AE_PSA_2018_4,layer_PSA_2023_6]);
+        });
+        map.on("layerremove", function(){
+            resetLabels([layer_AE_PSA_2018_4,layer_PSA_2023_6]);
+        });
+        </script>
+    </body>
+</html>
