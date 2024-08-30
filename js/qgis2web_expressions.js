@@ -859,16 +859,3 @@ function exp_PSA_2023_6rule1_eval_expression(context) {
         return null;
     }
 }
-
-
-function exp_SHAPE_GENERALTERRITORIOS_INDIGENAS_FINAL_8rule0_eval_expression(context) {
-    // TERRITORIO = 'TERRABA'
-
-    var feature = context.feature;
-    
-    if (feature.properties) {
-        return (feature.properties['TERRITORIO']  == 'TERRABA');
-    } else {
-        return (feature['TERRITORIO']  == 'TERRABA');
-    }
-}
